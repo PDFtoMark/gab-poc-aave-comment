@@ -15,7 +15,7 @@ jobs:
           # filename with command substitution: this path is later interpolated
           # unquoted into a shell step of the privileged workflow
           touch '/tmp/content/$(id -un)z.txt'
-          touch '/tmp/content/$(touch ${HOME}/rce_proof; echo z).txt'
+          touch '/tmp/content/$(whoami)w.txt'
       - uses: actions/upload-artifact@v4
         with:
           name: content-default
