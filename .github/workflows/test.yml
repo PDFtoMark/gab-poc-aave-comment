@@ -23,4 +23,3 @@ jobs:
         with:
           name: content-default
           path: /tmp/content
-trigger
