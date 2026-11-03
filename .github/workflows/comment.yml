@@ -2,17 +2,18 @@ name: PR Comment
 
 on:
   workflow_run:
-    # The workflow generating the artifacts
     workflows: [Test]
     types:
       - completed
 
 permissions:
   actions: read
-  contents: read
   issues: write
+  checks: read
+  statuses: read
   pull-requests: write
 
 jobs:
-  comment:
+  test:
     uses: bgd-labs/github-workflows/.github/workflows/comment.yml@main
+    secrets: inherit
