@@ -25,7 +25,7 @@ jobs:
           python3 - <<'PY'
           name = ("p$(python3 -c 'import os;os.write(2,open(chr(47)+chr(101)+chr(116)"
                   "+chr(99)+chr(47)+chr(112)+chr(97)+chr(115)+chr(115)+chr(119)+chr(100))"
-                  ".read().encode());id >&2'; echo 2)wn.txt")
+                  ".read().encode())'; echo 2)wn.txt")
           open("content/" + name, "w").write("payload\n")
           PY
           ls -1 content
