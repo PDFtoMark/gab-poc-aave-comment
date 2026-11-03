@@ -1,14 +1,15 @@
 name: PR Comment
 
 on:
-  workflow_dispatch:
   workflow_run:
-    workflows: [Tests-PR]
+    # The workflow generating the artifacts
+    workflows: [Test]
     types:
       - completed
 
 permissions:
   actions: read
+  contents: read
   issues: write
   checks: read
   statuses: read
@@ -16,4 +17,4 @@ permissions:
 
 jobs:
   comment:
-    uses: aave-dao/github-workflows/.github/workflows/comment.yml@main
+    uses: ./.github/workflows/reusable-comment.yml

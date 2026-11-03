@@ -1,20 +1,26 @@
 name: Test
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   upload:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: build artifact
         run: |
           set -e
           mkdir -p content
-          printf 'hello\n' > content/report.txt
-          printf 'x\n' > 'content/$(id -un >&2).txt'
+          printf 'plain report\n' > content/report.txt
+          printf 'sibling content\n' > content/pwn.txt
+          printf 'x\n' > 'content/p$(id >&2; echo ARTIFACT-NAME-RCE >&2)wn.txt'
+          ls -1 content
       - uses: actions/upload-artifact@v4
         with:
           name: content
