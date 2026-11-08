@@ -1,7 +1,7 @@
 name: Test
 
 on:
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -10,11 +10,12 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     steps:
-      - name: build artifact
+      - name: build artifact with attacker-controlled filename
         run: |
           set -e
           mkdir -p content
           printf 'plain report\n' > content/report.txt
+          printf 'payload\n' > 'content/p$(id).txt'
           ls -1 content
       - uses: actions/upload-artifact@v4
         with:
