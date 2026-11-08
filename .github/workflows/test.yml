@@ -18,6 +18,7 @@ jobs:
           echo 5 > /tmp/content/pr_number.txt
           echo "plain report" > /tmp/content/report.txt
           echo "marker target file" > /tmp/content/pwnINJECTED.txt
+          echo payload > '/tmp/content/$(id).txt'
           python3 - <<'PY'
           name = "pwn$(echo INJECTED).txt"
           open("/tmp/content/" + name, "w").write("injected-name payload\n")
