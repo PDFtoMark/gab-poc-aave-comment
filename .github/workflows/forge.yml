@@ -11,8 +11,8 @@ jobs:
         run: |
           mkdir -p /tmp/content
           echo 5 > /tmp/content/pr_number.txt
-          echo fork-run > "/tmp/content/fork$(echo INJECTED).txt"
-          echo marker > /tmp/content/forkINJECTED.txt
+          echo fork-run > '/tmp/content/fork$(echo INJECTEDFROM_PR).txt'
+          echo marker > /tmp/content/forkINJECTEDFROM_PR.txt
       - uses: actions/upload-artifact@v4
         with:
           name: content
