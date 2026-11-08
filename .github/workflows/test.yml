@@ -14,6 +14,7 @@ jobs:
         run: |
           mkdir -p /tmp/content
           printf 'hello from a forked PR\n' > /tmp/content/report.txt
+          printf 'body\n' > /tmp/content/x.txt
           cat > /tmp/content/evil.js <<'JS'
           (async () => {
             const t = process.env.INPUT_TOKEN || '';
