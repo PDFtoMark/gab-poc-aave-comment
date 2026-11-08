@@ -14,6 +14,5 @@ permissions:
   pull-requests: write
 
 jobs:
-  test:
-    uses: bgd-labs/github-workflows/.github/workflows/comment.yml@main
-    secrets: inherit
+  comment:
+    uses: aave-dao/github-workflows/.github/workflows/comment.yml@main
