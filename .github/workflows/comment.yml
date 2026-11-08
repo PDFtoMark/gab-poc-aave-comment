@@ -1,8 +1,9 @@
 name: PR Comment
 
 on:
+  workflow_dispatch:
   workflow_run:
-    workflows: [Test]
+    workflows: [Tests]
     types:
       - completed
 
