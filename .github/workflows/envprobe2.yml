@@ -1,0 +1,27 @@
+name: envprobe2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - name: set vars
+        run: |
+          echo "GITHUB_API_URL=https://example.org" >> $GITHUB_ENV
+          echo "LD_PRELOAD=/tmp/x.so" >> $GITHUB_ENV
+          echo "BASH_ENV=/tmp/x.sh" >> $GITHUB_ENV
+          echo "HTTPS_PROXY=http://127.0.0.1:9" >> $GITHUB_ENV
+      - name: read vars
+        run: |
+          echo "API=$GITHUB_API_URL"
+          echo "LD=$LD_PRELOAD"
+          echo "BE=$BASH_ENV"
+          echo "PROXY=$HTTPS_PROXY"
+      - name: node action env
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log('NODE_API_URL=' + process.env.GITHUB_API_URL);
+            console.log('NODE_LD=' + (process.env.LD_PRELOAD || 'none'));
